@@ -1,19 +1,72 @@
-const piecesSize = document.getElementById("puzzle-size");
-const mapFrame = document.getElementById("map-frame");
-const mapElement = document.getElementById("map");
-const puzzleGame = document.getElementById("puzzle-game");
-const locationButton = document.getElementById("location-button");
-const createPuzzleButton = document.getElementById("create-puzzle-button");
-const toggleMapButton = document.getElementById("toggle-map-button");
-const coordinatesDisplay = document.getElementById("coordinates");
-const errorEl = document.getElementById("puzzle-error");
+const translations = {
+  en: {
+    title: "Weather Forecast",
+    city: "Enter city (e.g. Warsaw, Poland)",
+    button: "Weather",
+    current: "Current",
+    fiveDay: "5-Day Forecast",
+    empty: "Enter a city to see the forecast.",
+    humidity: "Humidity",
+    wind: "Wind",
+    feelsLike: "Feels like",
+    rain: "Rain chance",
+    loading: "Loading forecast…",
+    error: "Could not load the weather. Please try again.",
+  },
+  pl: {
+    title: "Prognoza pogody",
+    city: "Wprowadź miasto (np. Warszawa, Polska)",
+    button: "Pogoda",
+    current: "Aktualnie",
+    fiveDay: "Prognoza 5-dniowa",
+    empty: "Wprowadź miasto, aby zobaczyć prognozę.",
+    humidity: "Wilgotność",
+    wind: "Wiatr",
+    feelsLike: "Odczuwalna",
+    rain: "Szansa opadów",
+    loading: "Pobieranie prognozy…",
+    error: "Nie udało się pobrać pogody. Spróbuj ponownie.",
+  },
+};
 
-let map;
-let size = Number(piecesSize.value);
-let pieces = [];
-let slots = [];
-let image = "";
-let mapVisible = true;
+const weatherDescriptions = {
+  0: ["Clear sky", "Bezchmurnie"],
+  1: ["Mainly clear", "Przeważnie bezchmurnie"],
+  2: ["Partly cloudy", "Częściowe zachmurzenie"],
+  3: ["Overcast", "Pochmurno"],
+  45: ["Fog", "Mgła"],
+  48: ["Depositing rime fog", "Osadzająca się mgła"],
+  51: ["Light drizzle", "Lekka mżawka"],
+  53: ["Drizzle", "Mżawka"],
+  55: ["Dense drizzle", "Intensywna mżawka"],
+  61: ["Light rain", "Lekki deszcz"],
+  63: ["Rain", "Deszcz"],
+  65: ["Heavy rain", "Silny deszcz"],
+  71: ["Light snow", "Lekki śnieg"],
+  73: ["Snow", "Śnieg"],
+  75: ["Heavy snow", "Intensywny śnieg"],
+  80: ["Rain showers", "Przelotny deszcz"],
+  81: ["Rain showers", "Przelotny deszcz"],
+  82: ["Heavy rain showers", "Silne przelotne opady"],
+  95: ["Thunderstorm", "Burza"],
+  96: ["Thunderstorm with hail", "Burza z gradem"],
+  99: ["Thunderstorm with hail", "Burza z gradem"],
+};
+
+const form = document.getElementById("weather-form");
+const cityInput = document.getElementById("weather-city");
+const langSelect = document.getElementById("weather-language");
+const statusEl = document.getElementById("weather-status");
+const errorEl = document.getElementById("weather-error");
+const resultsEl = document.getElementById("weather-results");
+
+function describeWeather(code, language) {
+  return weatherDescriptions[code]?.[language === "pl" ? 1 : 0] || (language === "pl" ? "Warunki pogodowe" : "Weather conditions");
+}
+
+function setStatus(message) {
+  statusEl.textContent = message;
+}
 
 function setError(message) {
   if (!message) {
@@ -25,162 +78,124 @@ function setError(message) {
   errorEl.hidden = false;
 }
 
-function createMap() {
-  map = L.map(mapElement).setView([52.237049, 21.017532], 13);
-  L.tileLayer("https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}", {
-    attribution: "Tiles © Esri",
-    maxZoom: 19,
-    crossOrigin: true,
-  }).addTo(map);
+function renderCurrent(weather, language) {
+  const t = translations[language];
+  return `
+    <div class="current-weather">
+      <div class="current-temperature">
+        <span class="weather-symbol" aria-hidden="true">${weather.current.weather_code <= 1 ? "☀️" : weather.current.weather_code < 50 ? "☁️" : "🌧️"}</span>
+        <strong>${Math.round(weather.current.temperature_2m)}°C</strong>
+        <span>${describeWeather(weather.current.weather_code, language)}</span>
+      </div>
+      <div class="weather-facts">
+        <div><span>${t.feelsLike}</span><strong>${Math.round(weather.current.apparent_temperature)}°C</strong></div>
+        <div><span>${t.humidity}</span><strong>${weather.current.relative_humidity_2m}%</strong></div>
+        <div><span>${t.wind}</span><strong>${Math.round(weather.current.wind_speed_10m)} km/h</strong></div>
+      </div>
+    </div>
+  `;
 }
 
-function shuffledPieces(nextSize) {
-  const result = Array.from({ length: nextSize * nextSize }, (_, id) => id);
-  for (let index = result.length - 1; index > 0; index -= 1) {
-    const otherIndex = Math.floor(Math.random() * (index + 1));
-    [result[index], result[otherIndex]] = [result[otherIndex], result[index]];
-  }
-  return result;
+function renderForecast(weather, language) {
+  const t = translations[language];
+  return `
+    <div class="forecast-days">
+      ${weather.daily.time.map((date, index) => `
+        <article class="forecast-day" key="${date}">
+          <h3>${new Date(`${date}T12:00:00`).toLocaleDateString(language, { weekday: "short", month: "short", day: "numeric" })}</h3>
+          <span class="weather-symbol" aria-hidden="true">${weather.daily.weather_code[index] <= 1 ? "☀️" : weather.daily.weather_code[index] < 50 ? "☁️" : "🌧️"}</span>
+          <p>${describeWeather(weather.daily.weather_code[index], language)}</p>
+          <strong>${Math.round(weather.daily.temperature_2m_max[index])}° / ${Math.round(weather.daily.temperature_2m_min[index])}°</strong>
+          <small>${t.rain}: ${weather.daily.precipitation_probability_max[index] ?? 0}%</small>
+        </article>
+      `).join("")}
+    </div>
+  `;
 }
 
-function renderPuzzle() {
-  const placed = new Set(slots.filter((piece) => piece !== null));
-  const pool = pieces.filter((piece) => !placed.has(piece));
-
-  const boardMarkup = slots
-    .map((piece, index) => {
-      const pieceMarkup = piece !== null
-        ? `<div class="puzzle-piece" draggable="true" data-piece="${piece}" style="background-image:url('${image}'); background-size:${size * 100}% ${size * 100}%; background-position:${(piece % size) * 100 / (size - 1)}% ${Math.floor(piece / size) * 100 / (size - 1)}%;"></div>`
-        : "";
-      return `<div class="puzzle-slot" data-slot="${index}" aria-label="Puzzle slot ${index + 1}">${pieceMarkup}</div>`;
-    })
-    .join("");
-
-  const poolMarkup = pool
-    .map((piece) => `
-      <div class="puzzle-piece" draggable="true" data-piece="${piece}" style="background-image:url('${image}'); background-size:${size * 100}% ${size * 100}%; background-position:${(piece % size) * 100 / (size - 1)}% ${Math.floor(piece / size) * 100 / (size - 1)}%;"></div>
-    `)
-    .join("");
-
-  puzzleGame.innerHTML = `
-    <div class="puzzle-board" style="--puzzle-size:${size}">${boardMarkup}</div>
-    <div class="puzzle-pool" aria-label="Unplaced puzzle pieces">${poolMarkup}</div>
+function renderWeather(weather, language) {
+  const t = translations[language];
+  resultsEl.innerHTML = `
+    <div class="forecast-tabs" role="tablist" aria-label="Forecast range">
+      <button type="button" class="active" data-view="current">${t.current}</button>
+      <button type="button" data-view="fiveDay">${t.fiveDay}</button>
+    </div>
+    <h2>${weather.location.name}${weather.location.country ? `, ${weather.location.country}` : ""}</h2>
+    <div id="forecast-content">${renderCurrent(weather, language)}</div>
   `;
 
-  puzzleGame.hidden = false;
-
-  puzzleGame.querySelectorAll(".puzzle-piece").forEach((pieceElement) => {
-    pieceElement.addEventListener("dragstart", (event) => {
-      event.dataTransfer.setData("text/plain", pieceElement.dataset.piece);
+  const tabButtons = resultsEl.querySelectorAll("button[data-view]");
+  tabButtons.forEach((button) => {
+    button.addEventListener("click", () => {
+      tabButtons.forEach((btn) => btn.classList.toggle("active", btn === button));
+      const view = button.dataset.view;
+      const content = document.getElementById("forecast-content");
+      content.innerHTML = view === "current" ? renderCurrent(weather, language) : renderForecast(weather, language);
     });
   });
 
-  puzzleGame.querySelectorAll(".puzzle-slot").forEach((slotElement) => {
-    slotElement.addEventListener("dragover", (event) => event.preventDefault());
-    slotElement.addEventListener("drop", (event) => {
-      event.preventDefault();
-      const pieceId = Number(event.dataTransfer.getData("text/plain"));
-      movePiece(pieceId, Number(slotElement.dataset.slot));
-    });
-  });
-
-  puzzleGame.querySelector(".puzzle-pool").addEventListener("dragover", (event) => event.preventDefault());
-  puzzleGame.querySelector(".puzzle-pool").addEventListener("drop", (event) => {
-    event.preventDefault();
-    const pieceId = Number(event.dataTransfer.getData("text/plain"));
-    setSlots((current) => current.map((piece) => (piece === pieceId ? null : piece)));
-  });
+  resultsEl.hidden = false;
 }
 
-function movePiece(pieceId, targetSlot) {
-  setSlots((current) => {
-    const next = [...current];
-    const sourceSlot = next.indexOf(pieceId);
-    const displacedPiece = next[targetSlot];
-    next[targetSlot] = pieceId;
-    if (sourceSlot >= 0) next[sourceSlot] = displacedPiece ?? null;
-    return next;
-  });
-}
+async function searchWeather(event) {
+  event.preventDefault();
+  const language = langSelect.value;
+  const city = cityInput.value.trim();
+  const t = translations[language];
 
-function setSlots(updateFn) {
-  slots = typeof updateFn === "function" ? updateFn(slots) : updateFn;
-  renderPuzzle();
-  if (slots.length && slots.every((piece, index) => piece === index)) {
-    window.setTimeout(() => window.alert("Congratulations! You completed the puzzle!"), 0);
-  }
-}
-
-async function useMyLocation() {
-  if (!navigator.geolocation) {
-    setError("Geolocation is not supported by this browser.");
+  if (!city) {
+    setStatus(language === "pl" ? "Wprowadź nazwę miasta." : "Please enter a city.");
+    setError("");
+    resultsEl.hidden = true;
     return;
   }
 
-  navigator.geolocation.getCurrentPosition(({ coords }) => {
-    const lat = coords.latitude;
-    const lon = coords.longitude;
-    coordinatesDisplay.textContent = `Lat: ${lat.toFixed(6)}, Long: ${lon.toFixed(6)}`;
-    map.setView([lat, lon], 13);
-    L.marker([lat, lon]).addTo(map).bindPopup("Your location");
-    setError("");
-  }, () => {
-    setError("Could not get your location. Check your browser permissions.");
-  });
-}
-
-async function createPuzzle() {
+  setStatus(t.loading);
   setError("");
-  const captureButton = createPuzzleButton;
-  captureButton.disabled = true;
-  captureButton.textContent = "Capturing map…";
 
   try {
-    const canvas = await Promise.race([
-      html2canvas(mapElement, {
-        useCORS: true,
-        allowTaint: false,
-        scale: 1,
-        imageTimeout: 10000,
-        ignoreElements: (element) => element.classList.contains("leaflet-control-container"),
-      }),
-      new Promise((_, reject) => {
-        setTimeout(() => reject(new Error("Map capture timed out.")), 15000);
-      }),
-    ]);
+    const geocodingUrl = new URL("https://geocoding-api.open-meteo.com/v1/search");
+    geocodingUrl.search = new URLSearchParams({ name: city, count: "1", language, format: "json" }).toString();
+    const geocodingResponse = await fetch(geocodingUrl, { signal: AbortSignal.timeout(10000) });
+    if (!geocodingResponse.ok) throw new Error();
 
-    size = Number(piecesSize.value);
-    image = canvas.toDataURL("image/png");
-    pieces = shuffledPieces(size);
-    slots = Array(size * size).fill(null);
-    renderPuzzle();
-    mapVisible = false;
-    mapFrame.classList.add("map-frame-hidden");
-  } catch (captureError) {
-    console.error(captureError);
-    setError("Could not capture the map image. Please try again after the map tiles load.");
-  } finally {
-    captureButton.disabled = false;
-    captureButton.textContent = "Create puzzle";
+    const location = (await geocodingResponse.json()).results?.[0];
+    if (!location) {
+      throw new Error(language === "pl" ? "Nie znaleziono miasta." : "City not found.");
+    }
+
+    const forecastUrl = new URL("https://api.open-meteo.com/v1/forecast");
+    forecastUrl.search = new URLSearchParams({
+      latitude: String(location.latitude),
+      longitude: String(location.longitude),
+      current: "temperature_2m,relative_humidity_2m,apparent_temperature,weather_code,wind_speed_10m,wind_direction_10m",
+      daily: "weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max",
+      forecast_days: "5",
+      timezone: "auto",
+      temperature_unit: "celsius",
+      wind_speed_unit: "kmh",
+    }).toString();
+
+    const forecastResponse = await fetch(forecastUrl, { signal: AbortSignal.timeout(10000) });
+    if (!forecastResponse.ok) throw new Error();
+
+    const weather = { location: { name: location.name, country: location.country }, ...(await forecastResponse.json()) };
+    renderWeather(weather, language);
+    setStatus("");
+  } catch (requestError) {
+    const message = requestError.message || t.error;
+    setError(message);
+    setStatus("");
+    resultsEl.hidden = true;
   }
 }
 
-piecesSize.addEventListener("change", () => {
-  size = Number(piecesSize.value);
-  pieces = [];
-  slots = [];
-  image = "";
-  puzzleGame.hidden = true;
-  puzzleGame.innerHTML = "";
+langSelect.addEventListener("change", () => {
+  const language = langSelect.value;
+  const t = translations[language];
+  cityInput.placeholder = t.city;
+  const button = form.querySelector("button[type='submit']");
+  button.textContent = t.button;
 });
 
-locationButton.addEventListener("click", useMyLocation);
-createPuzzleButton.addEventListener("click", createPuzzle);
-toggleMapButton.addEventListener("click", () => {
-  mapVisible = !mapVisible;
-  mapFrame.classList.toggle("map-frame-hidden", !mapVisible);
-  toggleMapButton.textContent = mapVisible ? "Hide map" : "Show map";
-  if (map) map.invalidateSize();
-});
-
-createMap();
+form.addEventListener("submit", searchWeather);

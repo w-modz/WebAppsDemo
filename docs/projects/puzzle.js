@@ -1,189 +1,186 @@
-const storageKey = "webapps-demo-static-tasks";
+const piecesSize = document.getElementById("puzzle-size");
+const mapFrame = document.getElementById("map-frame");
+const mapElement = document.getElementById("map");
+const puzzleGame = document.getElementById("puzzle-game");
+const locationButton = document.getElementById("location-button");
+const createPuzzleButton = document.getElementById("create-puzzle-button");
+const toggleMapButton = document.getElementById("toggle-map-button");
+const coordinatesDisplay = document.getElementById("coordinates");
+const errorEl = document.getElementById("puzzle-error");
 
-const taskList = document.getElementById("task-list");
-const taskForm = document.getElementById("task-form");
-const newTaskInput = document.getElementById("new-task");
-const deadlineInput = document.getElementById("task-deadline");
-const searchInput = document.getElementById("search-input");
-const errorEl = document.getElementById("error");
-
-function getDefaultDeadline() {
-  const date = new Date();
-  date.setDate(date.getDate() + 1);
-  date.setMinutes(date.getMinutes() - date.getTimezoneOffset());
-  return date.toISOString().slice(0, 16);
-}
-
-function getTasks() {
-  try {
-    const value = localStorage.getItem(storageKey);
-    return value ? JSON.parse(value) : [];
-  } catch {
-    return [];
-  }
-}
-
-function saveTasks(tasks) {
-  localStorage.setItem(storageKey, JSON.stringify(tasks));
-}
+let map;
+let size = Number(piecesSize.value);
+let pieces = [];
+let slots = [];
+let image = "";
+let mapVisible = true;
 
 function setError(message) {
-  errorEl.textContent = message || "";
-  errorEl.hidden = !message;
-}
-
-function renderTasks() {
-  const query = searchInput.value.trim().toLowerCase();
-  const tasks = getTasks().filter((task) => task.content.toLowerCase().includes(query));
-
-  if (!tasks.length) {
-    taskList.innerHTML = `<li class="empty-state">${query ? "No matching tasks." : "No tasks yet. Add one below."}</li>`;
+  if (!message) {
+    errorEl.hidden = true;
+    errorEl.textContent = "";
     return;
   }
+  errorEl.textContent = message;
+  errorEl.hidden = false;
+}
 
-  taskList.innerHTML = tasks
-    .map((task) => {
-      const isEditing = task.id === taskList.dataset.editingId;
-      if (isEditing) {
-        return `
-          <li class="task-item">
-            <div class="task-content">
-              <form class="edit-task-form" data-edit-id="${task.id}">
-                <input aria-label="Edit task" value="${escapeHtml(task.content)}" name="edit-content" />
-                <button type="submit">Save</button>
-                <button type="button" class="button-muted" data-cancel-edit="${task.id}">Cancel</button>
-              </form>
-            </div>
-          </li>
-        `;
-      }
+function createMap() {
+  map = L.map(mapElement).setView([52.237049, 21.017532], 13);
+  L.tileLayer("https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}", {
+    attribution: "Tiles © Esri",
+    maxZoom: 19,
+    crossOrigin: true,
+  }).addTo(map);
+}
 
-      return `
-        <li class="task-item" data-task-id="${task.id}">
-          <div class="task-content">
-            <button class="task-text" type="button" data-edit="${task.id}">${highlightText(task.content, query)}</button>
-            <small>Deadline: ${new Date(task.deadline).toLocaleString()}</small>
-          </div>
-          <button class="delete-btn" type="button" data-delete="${task.id}">Delete</button>
-        </li>
-      `;
+function shuffledPieces(nextSize) {
+  const result = Array.from({ length: nextSize * nextSize }, (_, id) => id);
+  for (let index = result.length - 1; index > 0; index -= 1) {
+    const otherIndex = Math.floor(Math.random() * (index + 1));
+    [result[index], result[otherIndex]] = [result[otherIndex], result[index]];
+  }
+  return result;
+}
+
+function renderPuzzle() {
+  const placed = new Set(slots.filter((piece) => piece !== null));
+  const pool = pieces.filter((piece) => !placed.has(piece));
+
+  const boardMarkup = slots
+    .map((piece, index) => {
+      const pieceMarkup = piece !== null
+        ? `<div class="puzzle-piece" draggable="true" data-piece="${piece}" style="background-image:url('${image}'); background-size:${size * 100}% ${size * 100}%; background-position:${(piece % size) * 100 / (size - 1)}% ${Math.floor(piece / size) * 100 / (size - 1)}%;"></div>`
+        : "";
+      return `<div class="puzzle-slot" data-slot="${index}" aria-label="Puzzle slot ${index + 1}">${pieceMarkup}</div>`;
     })
     .join("");
-}
 
-function escapeHtml(value) {
-  return value.replace(/[&<>"']/g, (char) => ({
-    "&": "&amp;",
-    "<": "&lt;",
-    ">": "&gt;",
-    '"': "&quot;",
-    "'": "&#39;",
-  }[char]));
-}
+  const poolMarkup = pool
+    .map((piece) => `
+      <div class="puzzle-piece" draggable="true" data-piece="${piece}" style="background-image:url('${image}'); background-size:${size * 100}% ${size * 100}%; background-position:${(piece % size) * 100 / (size - 1)}% ${Math.floor(piece / size) * 100 / (size - 1)}%;"></div>
+    `)
+    .join("");
 
-function highlightText(text, query) {
-  if (!query || query.length < 2) return text;
-  const index = text.toLowerCase().indexOf(query.toLowerCase());
-  if (index < 0) return text;
-  const first = text.slice(0, index);
-  const match = text.slice(index, index + query.length);
-  const rest = text.slice(index + query.length);
-  return `${first}<mark>${match}</mark>${highlightText(rest, query)}`;
-}
+  puzzleGame.innerHTML = `
+    <div class="puzzle-board" style="--puzzle-size:${size}">${boardMarkup}</div>
+    <div class="puzzle-pool" aria-label="Unplaced puzzle pieces">${poolMarkup}</div>
+  `;
 
-function addTask(event) {
-  event.preventDefault();
-  const content = newTaskInput.value.trim();
-  const deadlineValue = deadlineInput.value;
+  puzzleGame.hidden = false;
 
-  if (!content || content.length < 3 || content.length > 255) {
-    setError("Enter a task of 3–255 characters.");
-    return;
-  }
-
-  if (!deadlineValue || Number.isNaN(new Date(deadlineValue).getTime()) || new Date(deadlineValue) <= new Date()) {
-    setError("Enter a future deadline.");
-    return;
-  }
-
-  const tasks = getTasks();
-  tasks.push({
-    id: crypto.randomUUID(),
-    content,
-    deadline: new Date(deadlineValue).toISOString(),
-    createdAt: new Date().toISOString(),
+  puzzleGame.querySelectorAll(".puzzle-piece").forEach((pieceElement) => {
+    pieceElement.addEventListener("dragstart", (event) => {
+      event.dataTransfer.setData("text/plain", pieceElement.dataset.piece);
+    });
   });
 
-  saveTasks(tasks);
-  newTaskInput.value = "";
-  deadlineInput.value = getDefaultDeadline();
+  puzzleGame.querySelectorAll(".puzzle-slot").forEach((slotElement) => {
+    slotElement.addEventListener("dragover", (event) => event.preventDefault());
+    slotElement.addEventListener("drop", (event) => {
+      event.preventDefault();
+      const pieceId = Number(event.dataTransfer.getData("text/plain"));
+      movePiece(pieceId, Number(slotElement.dataset.slot));
+    });
+  });
+
+  puzzleGame.querySelector(".puzzle-pool").addEventListener("dragover", (event) => event.preventDefault());
+  puzzleGame.querySelector(".puzzle-pool").addEventListener("drop", (event) => {
+    event.preventDefault();
+    const pieceId = Number(event.dataTransfer.getData("text/plain"));
+    setSlots((current) => current.map((piece) => (piece === pieceId ? null : piece)));
+  });
+}
+
+function movePiece(pieceId, targetSlot) {
+  setSlots((current) => {
+    const next = [...current];
+    const sourceSlot = next.indexOf(pieceId);
+    const displacedPiece = next[targetSlot];
+    next[targetSlot] = pieceId;
+    if (sourceSlot >= 0) next[sourceSlot] = displacedPiece ?? null;
+    return next;
+  });
+}
+
+function setSlots(updateFn) {
+  slots = typeof updateFn === "function" ? updateFn(slots) : updateFn;
+  renderPuzzle();
+  if (slots.length && slots.every((piece, index) => piece === index)) {
+    window.setTimeout(() => window.alert("Congratulations! You completed the puzzle!"), 0);
+  }
+}
+
+async function useMyLocation() {
+  if (!navigator.geolocation) {
+    setError("Geolocation is not supported by this browser.");
+    return;
+  }
+
+  navigator.geolocation.getCurrentPosition(({ coords }) => {
+    const lat = coords.latitude;
+    const lon = coords.longitude;
+    coordinatesDisplay.textContent = `Lat: ${lat.toFixed(6)}, Long: ${lon.toFixed(6)}`;
+    map.setView([lat, lon], 13);
+    L.marker([lat, lon]).addTo(map).bindPopup("Your location");
+    setError("");
+  }, () => {
+    setError("Could not get your location. Check your browser permissions.");
+  });
+}
+
+async function createPuzzle() {
   setError("");
-  renderTasks();
-}
+  const captureButton = createPuzzleButton;
+  captureButton.disabled = true;
+  captureButton.textContent = "Capturing map…";
 
-function deleteTask(taskId) {
-  const tasks = getTasks().filter((task) => task.id !== taskId);
-  saveTasks(tasks);
-  renderTasks();
-}
+  try {
+    const canvas = await Promise.race([
+      html2canvas(mapElement, {
+        useCORS: true,
+        allowTaint: false,
+        scale: 1,
+        imageTimeout: 10000,
+        ignoreElements: (element) => element.classList.contains("leaflet-control-container"),
+      }),
+      new Promise((_, reject) => {
+        setTimeout(() => reject(new Error("Map capture timed out.")), 15000);
+      }),
+    ]);
 
-function startEditing(taskId) {
-  taskList.dataset.editingId = taskId;
-  renderTasks();
-}
-
-function confirmEdit(event) {
-  event.preventDefault();
-  const form = event.currentTarget;
-  const taskId = form.dataset.editId;
-  const input = form.querySelector("input[name='edit-content']");
-  const value = input.value.trim();
-
-  if (!value || value.length < 3 || value.length > 255) {
-    setError("Task text must be between 3 and 255 characters.");
-    return;
+    size = Number(piecesSize.value);
+    image = canvas.toDataURL("image/png");
+    pieces = shuffledPieces(size);
+    slots = Array(size * size).fill(null);
+    renderPuzzle();
+    mapVisible = false;
+    mapFrame.classList.add("map-frame-hidden");
+  } catch (captureError) {
+    console.error(captureError);
+    setError("Could not capture the map image. Please try again after the map tiles load.");
+  } finally {
+    captureButton.disabled = false;
+    captureButton.textContent = "Create puzzle";
   }
-
-  const tasks = getTasks().map((task) => task.id === taskId ? { ...task, content: value } : task);
-  saveTasks(tasks);
-  delete taskList.dataset.editingId;
-  setError("");
-  renderTasks();
 }
 
-function cancelEdit() {
-  delete taskList.dataset.editingId;
-  renderTasks();
-}
-
-taskForm.addEventListener("submit", addTask);
-searchInput.addEventListener("input", renderTasks);
-
-taskList.addEventListener("click", (event) => {
-  const deleteButton = event.target.closest("[data-delete]");
-  if (deleteButton) {
-    deleteTask(deleteButton.dataset.delete);
-    return;
-  }
-
-  const editButton = event.target.closest("[data-edit]");
-  if (editButton) {
-    startEditing(editButton.dataset.edit);
-    return;
-  }
-
-  const cancelButton = event.target.closest("[data-cancel-edit]");
-  if (cancelButton) {
-    cancelEdit();
-  }
+piecesSize.addEventListener("change", () => {
+  size = Number(piecesSize.value);
+  pieces = [];
+  slots = [];
+  image = "";
+  puzzleGame.hidden = true;
+  puzzleGame.innerHTML = "";
 });
 
-taskList.addEventListener("submit", (event) => {
-  const form = event.target.closest(".edit-task-form");
-  if (form) {
-    confirmEdit(event);
-  }
+locationButton.addEventListener("click", useMyLocation);
+createPuzzleButton.addEventListener("click", createPuzzle);
+toggleMapButton.addEventListener("click", () => {
+  mapVisible = !mapVisible;
+  mapFrame.classList.toggle("map-frame-hidden", !mapVisible);
+  toggleMapButton.textContent = mapVisible ? "Hide map" : "Show map";
+  if (map) map.invalidateSize();
 });
 
-deadlineInput.value = getDefaultDeadline();
-renderTasks();
+createMap();

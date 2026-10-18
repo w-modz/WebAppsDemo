@@ -3,9 +3,15 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="description" content="Static todo demo." />
-    <title>Todo App | WebApps Demo</title>
+    <meta name="description" content="Static map puzzle demo." />
+    <title>Map Puzzle | WebApps Demo</title>
     <link rel="stylesheet" href="../styles.css" />
+    <link
+      rel="stylesheet"
+      href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+      integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
+      crossorigin=""
+    />
   </head>
   <body>
     <nav class="site-nav" aria-label="Main navigation">
@@ -18,34 +24,40 @@
     </nav>
 
     <main class="project-page">
-      <section class="todo-app">
-        <header class="todo-header">
-          <p class="eyebrow">Project A · Tasks stored locally</p>
-          <h1>Todo List</h1>
-          <p>Your tasks are saved in this browser, not on a server.</p>
+      <section class="puzzle-app">
+        <header class="puzzle-header">
+          <p class="eyebrow">Project B · Interactive map</p>
+          <h1>Map Puzzle</h1>
+          <p>Choose a location, capture the map, and put the pieces back in order.</p>
         </header>
 
-        <label class="todo-search">
-          <span class="sr-only">Search tasks</span>
-          <input id="search-input" type="search" placeholder="Search tasks..." aria-label="Search tasks" />
-        </label>
+        <div class="puzzle-controls">
+          <button type="button" id="location-button">My location</button>
+          <button type="button" id="create-puzzle-button">Create puzzle</button>
+          <button type="button" class="button-muted" id="toggle-map-button">Hide map</button>
+          <label>
+            <span class="sr-only">Puzzle size</span>
+            <select id="puzzle-size">
+              <option value="2">2 × 2</option>
+              <option value="3">3 × 3</option>
+              <option value="4">4 × 4</option>
+            </select>
+          </label>
+          <span class="coordinates" id="coordinates">Click “My location” to get coordinates.</span>
+        </div>
 
-        <p id="error" class="app-error" role="alert" hidden></p>
+        <p id="puzzle-error" class="app-error" role="alert" hidden></p>
 
-        <section class="task-list-container" aria-label="Tasks">
-          <ul id="task-list" class="task-list"></ul>
-        </section>
+        <div id="map-frame" class="map-frame">
+          <div id="map" class="map-canvas"></div>
+        </div>
 
-        <form id="task-form" class="add-task-form">
-          <label class="sr-only" for="new-task">New task</label>
-          <input id="new-task" type="text" placeholder="New task..." maxlength="255" required />
-          <label class="sr-only" for="task-deadline">Deadline</label>
-          <input id="task-deadline" type="datetime-local" required />
-          <button type="submit">Add Task</button>
-        </form>
+        <div id="puzzle-game" class="puzzle-game" hidden></div>
       </section>
     </main>
 
-    <script src="./todo.js"></script>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+    <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+    <script src="./puzzle.js"></script>
   </body>
 </html>
