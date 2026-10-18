@@ -250,4 +250,68 @@ class MapPuzzle {
 
             if (e.target.classList.contains('puzzle-slot')) {
                 e.preventDefault();
+                const targetPosition = parseInt(e.target.dataset.index);
 
+                if (e.target.children.length > 0) {
+                    return;
+                }
+
+                const wasInCorrectPosition = draggedElement.parentElement.classList.contains('puzzle-slot') &&
+                    parseInt(draggedElement.parentElement.dataset.index) === pieceId;
+
+                e.target.appendChild(draggedElement);
+
+                if (pieceId === targetPosition) {
+                    if (!wasInCorrectPosition) {
+                        this.correctPositions++;
+                    }
+                } else {
+                    if (wasInCorrectPosition) {
+                        this.correctPositions--;
+                    }
+                }
+
+                if (this.correctPositions === (this.gridSize * this.gridSize)) {
+                    setTimeout(() => this.showCompletionNotification(), 100);
+                }
+            } else if (e.target.id === 'puzzlePieces') {
+                e.preventDefault();
+
+                const wasInCorrectPosition = draggedElement.parentElement.classList.contains('puzzle-slot') &&
+                    parseInt(draggedElement.parentElement.dataset.index) === pieceId;
+
+                if (wasInCorrectPosition) {
+                    this.correctPositions--;
+                }
+
+                e.target.appendChild(draggedElement);
+            }
+
+            draggedElement = null;
+        });
+    }
+
+    showCompletionNotification() {
+        console.log('Puzzle completed successfully! All pieces are in correct positions.');
+        if (Notification.permission === 'granted') {
+            new Notification('Gratulacje!', {
+                body: 'Układanka została ukończona poprawnie!',
+                icon: 'https://upload.wikimedia.org/wikipedia/commons/thumb/b/b0/Openstreetmap_logo.svg/256px-Openstreetmap_logo.svg.png',
+                requireInteraction: false
+            });
+        } else {
+            alert('Gratulacje! Układanka została ukończona poprawnie!');
+        }
+    }
+
+    shuffleArray(array) {
+        for (let i = array.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [array[i], array[j]] = [array[j], array[i]];
+        }
+    }
+}
+
+window.addEventListener('load', () => {
+    new MapPuzzle();
+});
