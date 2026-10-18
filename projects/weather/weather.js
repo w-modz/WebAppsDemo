@@ -1,10 +1,10 @@
 class WeatherApp {
     constructor() {
         this.apiKey = '7ded80d91f2b280ec979100cc8bbba94';
-        this.currentLanguage = 'pl';
+        this.currentLanguage = 'en';
         this.currentForecastType = 'current';
         this.currentCoordinates = null;
-        this.addressInput = document.getElementById('addressInput');
+        this.cityInput = document.getElementById('cityInput');
         this.weatherBtn = document.getElementById('weatherBtn');
         this.weatherDisplay = document.getElementById('weatherDisplay');
         this.languageSelector = document.getElementById('languageSelector');
@@ -15,35 +15,35 @@ class WeatherApp {
         this.translations = {
             pl: {
                 title: 'Prognoza Pogody',
-                placeholder: 'Wprowadź adres (np. Warszawa, Polska)',
+                placeholder: 'Wprowadź miasto (np. Warszawa, Polska)',
                 button: 'Pogoda',
                 current: 'Aktualnie',
                 fiveDay: 'Prognoza 5-dniowa',
                 loading: 'Pobieranie danych pogodowych...',
                 pleaseWait: 'Proszę czekać',
-                enterAddress: 'Proszę wprowadzić adres.',
+                enterCity: 'Proszę wprowadzić miasto.',
                 humidity: 'Wilgotność',
                 wind: 'Wiatr',
-                locationNotFound: 'Nie znaleziono lokalizacji dla podanego adresu.',
-                coordinatesError: 'Nie udało się pobrać współrzędnych dla podanego adresu.',
+                locationNotFound: 'Nie znaleziono lokalizacji dla podanego miasta.',
+                coordinatesError: 'Nie udało się pobrać współrzędnych dla podanego miasta.',
                 weatherError: 'Wystąpił błąd podczas pobierania danych pogodowych.',
-                emptyMessage: 'Wprowadź adres i kliknij "Pogoda", aby zobaczyć prognozę'
+                emptyMessage: 'Wprowadź miasto i kliknij "Pogoda", aby zobaczyć prognozę'
             },
             en: {
                 title: 'Weather Forecast',
-                placeholder: 'Enter address (e.g. Warsaw, Poland)',
+                placeholder: 'Enter city (e.g. Warsaw, Poland)',
                 button: 'Weather',
                 current: 'Current',
                 fiveDay: '5-Day Forecast',
                 loading: 'Loading weather data...',
                 pleaseWait: 'Please wait',
-                enterAddress: 'Please enter an address.',
+                enterCity: 'Please enter a city.',
                 humidity: 'Humidity',
                 wind: 'Wind',
-                locationNotFound: 'Location not found for the given address.',
-                coordinatesError: 'Failed to get coordinates for the given address.',
+                locationNotFound: 'Location not found for the given city.',
+                coordinatesError: 'Failed to get coordinates for the given city.',
                 weatherError: 'An error occurred while fetching weather data.',
-                emptyMessage: 'Enter an address and click "Weather" to see the forecast'
+                emptyMessage: 'Enter a city and click "Weather" to see the forecast'
             }
         };
 
@@ -56,7 +56,7 @@ class WeatherApp {
             this.getWeather();
         });
 
-        this.addressInput.addEventListener('keypress', (e) => {
+        this.cityInput.addEventListener('keypress', (e) => {
             if (e.key === 'Enter') {
                 this.getWeather();
             }
@@ -80,15 +80,15 @@ class WeatherApp {
         const t = this.translations[this.currentLanguage];
 
         document.querySelector('h1').textContent = t.title;
-        this.addressInput.placeholder = t.placeholder;
+        this.cityInput.placeholder = t.placeholder;
         this.weatherBtn.textContent = t.button;
         this.currentBtn.textContent = t.current;
         this.fiveDayBtn.textContent = t.fiveDay;
         document.title = t.title;
 
         if (this.weatherDisplay.innerHTML.trim() === '' ||
-            this.weatherDisplay.textContent.includes('Wprowadź adres') ||
-            this.weatherDisplay.textContent.includes('Enter an address')) {
+            this.weatherDisplay.textContent.includes('Wprowadź miasto') ||
+            this.weatherDisplay.textContent.includes('Enter a city')) {
             this.showEmptyMessage();
         }
     }
@@ -103,18 +103,18 @@ class WeatherApp {
     }
 
     async getWeather() {
-        const address = this.addressInput.value.trim();
+        const city = this.cityInput.value.trim();
         const t = this.translations[this.currentLanguage];
 
-        if (!address) {
-            this.displayError(t.enterAddress);
+        if (!city) {
+            this.displayError(t.enterCity);
             return;
         }
 
         this.displayLoading();
 
         try {
-            const coordinates = await this.getCoordinates(address);
+            const coordinates = await this.getCoordinates(city);
 
             if (coordinates) {
                 this.currentCoordinates = coordinates;
@@ -139,9 +139,9 @@ class WeatherApp {
         }
     }
 
-    async getCoordinates(address) {
+    async getCoordinates(city) {
         try {
-            const geocodingUrl = `http://api.openweathermap.org/geo/1.0/direct?q=${encodeURIComponent(address)}&limit=1&appid=${this.apiKey}`;
+            const geocodingUrl = `http://api.openweathermap.org/geo/1.0/direct?q=${encodeURIComponent(city)}&limit=1&appid=${this.apiKey}`;
             const response = await fetch(geocodingUrl);
 
             if (!response.ok) {

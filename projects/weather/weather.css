@@ -100,7 +100,7 @@ h1 {
     color: #fff;
 }
 
-#addressInput {
+#cityInput {
     flex: 1;
     max-width: 400px;
     padding: 15px 20px;
@@ -113,11 +113,11 @@ h1 {
     outline: none;
 }
 
-#addressInput::placeholder {
+#cityInput::placeholder {
     color: #666;
 }
 
-#addressInput:focus {
+#cityInput:focus {
     background: rgba(255, 255, 255, 1);
     box-shadow: 0 6px 20px rgba(0,0,0,0.15);
 }
@@ -151,7 +151,7 @@ h1 {
 }
 
 .weather-display:empty::before {
-    content: "Wprowadź adres i kliknij 'Pogoda', aby zobaczyć prognozę";
+    content: "Wprowadź miasto i kliknij 'Pogoda', aby zobaczyć prognozę";
     color: rgba(255, 255, 255, 0.7);
     font-style: italic;
     display: flex;
