@@ -4,11 +4,11 @@ This repository collects the university web-app lab exercises into a single demo
 
 ## Included apps
 
-- Intro lab (`labs/intro`)
-- Todo app (`labs/todo`)
-- Map puzzle (`labs/puzzle`)
-- Weather app (`labs/weather`)
-- Custom PHP framework (`labs/php-framework`)
+- Intro lab (`projects/intro`)
+- Todo app (`projects/todo`)
+- Map puzzle (`projects/puzzle`)
+- Weather app (`projects/weather`)
+- Custom PHP framework (`projects/php-framework`)
 
 ## Demo entry point
 
