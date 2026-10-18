@@ -33,7 +33,8 @@ class MapPuzzle {
         this.map = L.map('map').setView([52.237049, 21.017532], 13);
         L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
             attribution: 'Tiles &copy; Esri &mdash; Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, and the GIS User Community',
-            maxZoom: 19
+            maxZoom: 19,
+            crossOrigin: true
         }).addTo(this.map);
     }
 
@@ -67,37 +68,18 @@ class MapPuzzle {
     initDownloadButton() {
         document.getElementById('downloadBtn').addEventListener('click', async () => {
             try {
-                const gridSize = this.gridSize;
-                const pieceSize = 150;
-                const boardSize = gridSize * pieceSize;
-
-                document.getElementById('map').style.width = boardSize + 'px';
-                document.getElementById('map').style.height = boardSize + 'px';
-                document.getElementById('puzzleBoard').style.width = boardSize + 'px';
-                document.getElementById('puzzleBoard').style.height = boardSize + 'px';
-
-                await new Promise(resolve => setTimeout(resolve, 400));
-
-                const bounds = this.map.getBounds();
-                const size = { x: boardSize, y: boardSize };
-                const staticMapUrl = `https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/export?bbox=${bounds.getWest()},${bounds.getSouth()},${bounds.getEast()},${bounds.getNorth()}&size=${size.x},${size.y}&format=png&transparent=false&f=image`;
-
-                const img = new Image();
-                img.crossOrigin = 'Anonymous';
-                img.onload = () => {
-                    const canvas = document.createElement('canvas');
-                    canvas.width = size.x;
-                    canvas.height = size.y;
-                    const ctx = canvas.getContext('2d');
-                    ctx.drawImage(img, 0, 0, size.x, size.y);
-                    this.createPuzzle(canvas);
-                    this.toggleMap(false);
-                };
-                img.onerror = () => {
-                    console.error('Error loading static map image');
-                    alert('Error capturing map image. Please try again.');
-                };
-                img.src = staticMapUrl;
+                const canvas = await html2canvas(document.getElementById('map'), {
+                    useCORS: true,
+                    allowTaint: false,
+                    scale: 1,
+                    ignoreElements: element => element.classList.contains('leaflet-control-container')
+                });
+                const boardSize = this.gridSize * 150;
+                const board = document.getElementById('puzzleBoard');
+                board.style.width = boardSize + 'px';
+                board.style.height = boardSize + 'px';
+                this.createPuzzle(canvas);
+                this.toggleMap(false);
             } catch (error) {
                 console.error('Error capturing map:', error);
                 alert('Error capturing map image');
@@ -294,13 +276,13 @@ class MapPuzzle {
     showCompletionNotification() {
         console.log('Puzzle completed successfully! All pieces are in correct positions.');
         if (Notification.permission === 'granted') {
-            new Notification('Gratulacje!', {
-                body: 'Układanka została ukończona poprawnie!',
+            new Notification('Congratulations!', {
+                body: 'You completed the puzzle!',
                 icon: 'https://upload.wikimedia.org/wikipedia/commons/thumb/b/b0/Openstreetmap_logo.svg/256px-Openstreetmap_logo.svg.png',
                 requireInteraction: false
             });
         } else {
-            alert('Gratulacje! Układanka została ukończona poprawnie!');
+            alert('Congratulations! You completed the puzzle!');
         }
     }
 
