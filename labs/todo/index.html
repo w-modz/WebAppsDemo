@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lista zadań</title>
+    <link rel="stylesheet" href="todo.css">
+</head>
+<body>
+    <h1>Wiktor Modzelewski AI Lab2</h1>
+    <h2>TODO List</h2>
+
+    <div class="search-container">
+        <input type="text" id="searchInput" placeholder="Search tasks..." />
+    </div>
+
+    <div class="task-list-container">
+        <ul id="taskList" class="task-list">
+            <!-- Tasks will be added here dynamically -->
+        </ul>
+    </div>
+
+    <div class="add-task-form">
+        <input type="text" id="newTaskInput" placeholder="New task..." />
+        <input type="datetime-local" id="taskDeadline" />
+        <button onclick="addTask()">Add Task</button>
+    </div>
+
+    <script src="todo.js"></script>
+</body>
+</html>

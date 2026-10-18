@@ -1,0 +1,161 @@
+body {
+    margin: 0;
+    padding: 20px;
+    font-family: 'Segoe UI', Arial, sans-serif;
+    background: linear-gradient(135deg, #74b9ff 0%, #0984e3 100%);
+    color: #fff;
+    min-height: 100vh;
+}
+
+.container {
+    max-width: 80%;
+    width: 80%;
+    margin: 0 auto;
+    background: rgba(255, 255, 255, 0.1);
+    padding: 30px;
+    border-radius: 15px;
+    backdrop-filter: blur(10px);
+    box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+}
+
+header {
+    text-align: center;
+    margin-bottom: 30px;
+}
+
+h1 {
+    font-size: 2.5em;
+    margin: 0;
+    color: #fff;
+    text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+}
+
+.language-section {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 20px;
+}
+
+#languageSelector {
+    padding: 10px 15px;
+    font-size: 14px;
+    border: none;
+    border-radius: 15px;
+    background: rgba(255, 255, 255, 0.9);
+    color: #333;
+    cursor: pointer;
+    outline: none;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+}
+
+#languageSelector:focus {
+    background: rgba(255, 255, 255, 1);
+    box-shadow: 0 4px 15px rgba(0,0,0,0.15);
+}
+
+.search-section {
+    display: flex;
+    gap: 15px;
+    margin-bottom: 20px;
+    align-items: center;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+.forecast-switcher {
+    display: flex;
+    justify-content: center;
+    gap: 0;
+    margin-bottom: 20px;
+}
+
+.forecast-btn {
+    padding: 10px 20px;
+    font-size: 14px;
+    font-weight: bold;
+    background: rgba(255, 255, 255, 0.1);
+    color: rgba(255, 255, 255, 0.7);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: none;
+}
+
+.forecast-btn:first-child {
+    border-radius: 15px 0 0 15px;
+}
+
+.forecast-btn:last-child {
+    border-radius: 0 15px 15px 0;
+    border-left: none;
+}
+
+.forecast-btn.active {
+    background: rgba(255, 255, 255, 0.9);
+    color: #333;
+}
+
+.forecast-btn:hover:not(.active) {
+    background: rgba(255, 255, 255, 0.2);
+    color: #fff;
+}
+
+#addressInput {
+    flex: 1;
+    max-width: 400px;
+    padding: 15px 20px;
+    font-size: 16px;
+    border: none;
+    border-radius: 25px;
+    background: rgba(255, 255, 255, 0.9);
+    color: #333;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+    outline: none;
+}
+
+#addressInput::placeholder {
+    color: #666;
+}
+
+#addressInput:focus {
+    background: rgba(255, 255, 255, 1);
+    box-shadow: 0 6px 20px rgba(0,0,0,0.15);
+}
+
+#weatherBtn {
+    padding: 15px 30px;
+    font-size: 16px;
+    font-weight: bold;
+    background: linear-gradient(45deg, #ff7675 0%, #e17055 100%);
+    color: white;
+    border: none;
+    border-radius: 25px;
+    cursor: pointer;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+    transition: all 0.3s ease;
+}
+
+#weatherBtn:hover {
+    background: linear-gradient(45deg, #e17055 0%, #ff7675 100%);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(0,0,0,0.25);
+}
+
+.weather-display {
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 15px;
+    padding: 20px;
+    min-height: 200px;
+    backdrop-filter: blur(5px);
+    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+}
+
+.weather-display:empty::before {
+    content: "Wprowadź adres i kliknij 'Pogoda', aby zobaczyć prognozę";
+    color: rgba(255, 255, 255, 0.7);
+    font-style: italic;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 160px;
+}

@@ -1,0 +1,178 @@
+body {
+    margin: 0;
+    padding: 20px;
+    font-family: 'Segoe UI', Arial, sans-serif;
+    background: linear-gradient(135deg, #6a3093 0%, #a044ff 100%);
+    color: #fff;
+    min-height: 100vh;
+}
+
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+    background: rgba(255, 255, 255, 0.1);
+    padding: 20px;
+    border-radius: 15px;
+    backdrop-filter: blur(10px);
+    box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+}
+
+.controls {
+    margin-bottom: 20px;
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    padding: 15px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 10px;
+}
+
+button {
+    padding: 12px 24px;
+    font-size: 16px;
+    cursor: pointer;
+    background: linear-gradient(45deg, #FF6B6B 0%, #FF8E53 100%);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-weight: bold;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+    transition: all 0.3s ease;
+}
+
+button:hover {
+    background: linear-gradient(45deg, #FF8E53 0%, #FF6B6B 100%);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(0,0,0,0.25);
+}
+
+.puzzle-size-select {
+    padding: 10px 15px;
+    font-size: 16px;
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.1);
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    color: white;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    backdrop-filter: blur(10px);
+}
+
+.puzzle-size-select:hover {
+    border-color: rgba(255, 255, 255, 0.5);
+    background: rgba(255, 255, 255, 0.2);
+}
+
+.puzzle-size-select option {
+    background: #6a3093;
+    color: white;
+}
+
+#coordinates {
+    margin-left: 20px;
+    font-size: 16px;
+    color: #fff;
+    background: rgba(0, 0, 0, 0.2);
+    padding: 8px 15px;
+    border-radius: 6px;
+    font-weight: 500;
+    min-width: 200px;
+    text-align: center;
+}
+
+#mapContainer {
+    transition: all 0.3s ease-in-out;
+    overflow: hidden;
+    margin-bottom: 20px;
+    display: flex;
+    justify-content: center;
+}
+
+#mapContainer.collapsed {
+    height: 0 !important;
+    margin-bottom: 0;
+}
+
+#map {
+    width: 500px;
+    height: 500px;
+    border-radius: 15px;
+    box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+    border: 2px solid rgba(255, 255, 255, 0.18);
+}
+
+#puzzleContainer {
+    display: flex;
+    gap: 20px;
+    margin-top: 20px;
+    max-width: 100%;
+    justify-content: space-between;
+    align-items: flex-start;
+}
+
+#puzzleBoard {
+    width: calc(50% - 10px);
+    aspect-ratio: 1;
+    max-width: 500px;
+    max-height: 500px;
+    background: rgba(0, 0, 0, 0.2);
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    grid-template-rows: repeat(2, 1fr);
+    gap: 1px;
+    padding: 1px;
+    border-radius: 15px;
+    box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+    flex-shrink: 0;
+    order: 1;
+}
+
+#puzzlePieces {
+    width: calc(50% - 10px);
+    max-width: 500px;
+    min-height: 300px;
+    max-height: 500px;
+    overflow-y: auto;
+    background: rgba(255, 255, 255, 0.1);
+    padding: 15px;
+    border-radius: 15px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    align-content: flex-start;
+    backdrop-filter: blur(10px);
+    box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+    flex-shrink: 0;
+    order: 2;
+}
+
+.puzzle-piece {
+    width: calc(150px - 4px);
+    height: calc(150px - 4px);
+    border: 3px solid rgba(255, 255, 255, 0.3);
+    cursor: move;
+    background-size: 600px 600px;
+    border-radius: 8px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+    will-change: transform;
+}
+
+.puzzle-piece:hover {
+    border-color: rgba(255, 255, 255, 0.5);
+}
+
+.puzzle-slot {
+    width: 100%;
+    height: 100%;
+    background: rgba(255, 255, 255, 0.05);
+    border: 2px dashed rgba(255, 255, 255, 0.3);
+    border-radius: 8px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.puzzle-slot:hover {
+    background: rgba(255, 255, 255, 0.1);
+    border-color: rgba(255, 255, 255, 0.5);
+}

@@ -1,0 +1,79 @@
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: 'Segoe UI', Tahoma, sans-serif;
+  background: linear-gradient(135deg, #0f172a, #1e293b 40%, #334155);
+  color: #e2e8f0;
+}
+
+.container {
+  width: min(1100px, calc(100% - 32px));
+  margin: 0 auto;
+}
+
+.topbar {
+  padding: 64px 0 32px;
+  background: linear-gradient(135deg, rgba(59,130,246,0.2), rgba(168,85,247,0.18));
+  border-bottom: 1px solid rgba(148,163,184,0.2);
+}
+
+.topbar h1 {
+  margin: 0 0 10px;
+  font-size: clamp(2.2rem, 5vw, 4rem);
+}
+
+.topbar p {
+  margin: 0;
+  font-size: 1.08rem;
+  color: #cbd5e1;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 20px;
+  padding: 32px 0 50px;
+}
+
+.card {
+  display: block;
+  text-decoration: none;
+  color: inherit;
+  background: rgba(15, 23, 42, 0.7);
+  border: 1px solid rgba(148,163,184,0.2);
+  border-radius: 18px;
+  padding: 22px 20px;
+  box-shadow: 0 10px 30px rgba(15, 23, 42, 0.2);
+  transition: transform 0.2s ease, border-color 0.2s ease;
+}
+
+.card:hover {
+  transform: translateY(-4px);
+  border-color: rgba(96,165,250,0.8);
+}
+
+.badge {
+  display: inline-block;
+  background: linear-gradient(135deg, #38bdf8, #8b5cf6);
+  color: white;
+  padding: 6px 10px;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  margin-bottom: 18px;
+}
+
+.card h2 {
+  margin: 0 0 10px;
+  font-size: 1.5rem;
+}
+
+.card p {
+  margin: 0;
+  line-height: 1.6;
+  color: #cbd5e1;
+}
