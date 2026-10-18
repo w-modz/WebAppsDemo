@@ -99,7 +99,7 @@ export default function TodoPage() {
     <main className="project-page todo-page">
       <section className="todo-app">
         <header className="todo-header">
-          <p className="eyebrow">Project B · Tasks backed by Node</p>
+          <p className="eyebrow">Project A · Tasks backed by Node</p>
           <h1>Todo List</h1>
           <p>Your tasks are saved on the server, not just in this browser.</p>
         </header>

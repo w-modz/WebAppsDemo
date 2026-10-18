@@ -107,8 +107,7 @@ a {
   background: linear-gradient(135deg, rgba(80, 112, 210, 0.17), rgba(154, 96, 203, 0.12));
 }
 
-.topbar h1,
-.intro-heading h1 {
+.topbar h1 {
   margin: 8px 0 12px;
   font-family: "Playfair Display", Georgia, serif;
   font-size: clamp(2.6rem, 7vw, 5.2rem);
@@ -223,90 +222,10 @@ a {
   clip-path: inset(50%);
 }
 
-.intro-article,
 .todo-app,
 .puzzle-app,
 .weather-app {
   margin: 0 auto;
-}
-
-.intro-article {
-  max-width: 840px;
-  padding: 38px clamp(20px, 6vw, 64px);
-  border: 1px solid var(--line);
-  border-radius: 22px;
-  background: rgba(17, 29, 50, 0.82);
-  box-shadow: 0 24px 60px rgba(1, 6, 16, 0.2);
-}
-
-.intro-heading {
-  padding-bottom: 30px;
-  border-bottom: 1px solid var(--line);
-}
-
-.intro-heading h1 {
-  font-size: clamp(2.2rem, 6vw, 4rem);
-}
-
-.intro-heading h1 span {
-  color: #aabaff;
-}
-
-.intro-heading > p:last-child {
-  margin: 0;
-  color: var(--muted);
-}
-
-.intro-section {
-  display: grid;
-  grid-template-columns: 48px 1fr;
-  gap: 18px;
-  padding: 32px 0;
-  border-bottom: 1px solid var(--line);
-}
-
-.section-number {
-  padding-top: 6px;
-  color: #92a8ff;
-  font-size: 0.8rem;
-  font-weight: 700;
-  letter-spacing: 0.1em;
-}
-
-.intro-section h2 {
-  margin: 0 0 22px;
-  font-family: "Playfair Display", Georgia, serif;
-  font-size: 1.9rem;
-}
-
-.intro-subsection {
-  margin: 24px 0;
-}
-
-.intro-subsection h3 {
-  margin: 0 0 8px;
-  color: #d6deff;
-  font-size: 1.13rem;
-}
-
-.intro-subsection p,
-.intro-section li {
-  color: #bac5d8;
-  line-height: 1.75;
-}
-
-.intro-section ul {
-  padding-left: 22px;
-}
-
-.intro-section li + li {
-  margin-top: 8px;
-}
-
-.intro-footer {
-  padding-top: 24px;
-  color: var(--muted);
-  font-size: 0.85rem;
 }
 
 .todo-app {

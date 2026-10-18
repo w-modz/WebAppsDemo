@@ -94,7 +94,7 @@ export default function WeatherPage() {
     <main className="project-page weather-page">
       <section className="weather-app">
         <header className="weather-header">
-          <p className="eyebrow">Project D · Powered by Open-Meteo</p>
+          <p className="eyebrow">Project C · Powered by Open-Meteo</p>
           <h1>{t.title}</h1>
         </header>
         <div className="weather-language">

@@ -121,7 +121,7 @@ export default function PuzzlePage() {
     <main className="project-page puzzle-page">
       <section className="puzzle-app">
         <header className="puzzle-header">
-          <p className="eyebrow">Project C · Interactive map</p>
+          <p className="eyebrow">Project B · Interactive map</p>
           <h1>Map Puzzle</h1>
           <p>Choose a location, capture the map, and put the pieces back in order.</p>
         </header>

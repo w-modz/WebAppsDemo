@@ -1,13 +1,12 @@
 # WebApps Demo
 
-This repository brings four university web-app projects together as one React application, backed by a shared Node.js/Express server.
+This repository brings three university web-app projects together as one React application, backed by a shared Node.js/Express server.
 
 ## Included apps
 
-- Intro page: editorial content layout
-- Todo app: searchable tasks with server-side JSON persistence
-- Map puzzle: Leaflet map capture and drag-and-drop puzzle
-- Weather app: current conditions and five-day forecast from Open-Meteo
+- Project A — Todo app: searchable tasks with server-side JSON persistence
+- Project B — Map puzzle: Leaflet map capture and drag-and-drop puzzle
+- Project C — Weather app: current conditions and five-day forecast from Open-Meteo
 
 ## Demo entry point
 
