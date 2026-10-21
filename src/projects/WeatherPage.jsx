@@ -55,6 +55,8 @@ const weatherDescriptions = {
   99: ["Thunderstorm with hail", "Burza z gradem"],
 };
 
+const isStaticSite = import.meta.env.MODE === "pages";
+
 function describeWeather(code, language) {
   return weatherDescriptions[code]?.[language === "pl" ? 1 : 0] || (language === "pl" ? "Warunki pogodowe" : "Weather conditions");
 }
@@ -78,14 +80,41 @@ export default function WeatherPage() {
     setStatus("loading");
     setError("");
     try {
-      const params = new URLSearchParams({ city: city.trim(), language });
-      const response = await fetch(`/api/weather?${params}`);
-      const result = await response.json();
-      if (!response.ok) throw new Error(result.error || t.error);
+      let result;
+      if (isStaticSite) {
+        const geocodingUrl = new URL("https://geocoding-api.open-meteo.com/v1/search");
+        geocodingUrl.search = new URLSearchParams({ name: city.trim(), count: "1", language, format: "json" }).toString();
+        const geocodingResponse = await fetch(geocodingUrl, { signal: AbortSignal.timeout(10000) });
+        if (!geocodingResponse.ok) throw new Error(t.error);
+        const location = (await geocodingResponse.json()).results?.[0];
+        if (!location) throw new Error(language === "pl" ? "Nie znaleziono miasta." : "City not found.");
+
+        const forecastUrl = new URL("https://api.open-meteo.com/v1/forecast");
+        forecastUrl.search = new URLSearchParams({
+          latitude: String(location.latitude),
+          longitude: String(location.longitude),
+          current: "temperature_2m,relative_humidity_2m,apparent_temperature,weather_code,wind_speed_10m,wind_direction_10m",
+          daily: "weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max",
+          forecast_days: "5",
+          timezone: "auto",
+          temperature_unit: "celsius",
+          wind_speed_unit: "kmh",
+        }).toString();
+        const forecastResponse = await fetch(forecastUrl, { signal: AbortSignal.timeout(10000) });
+        if (!forecastResponse.ok) throw new Error(t.error);
+        result = { location: { name: location.name, country: location.country }, ...(await forecastResponse.json()) };
+      } else {
+        const params = new URLSearchParams({ city: city.trim(), language });
+        const response = await fetch(`/api/weather?${params}`);
+        result = await response.json();
+        if (!response.ok) throw new Error(result.error || t.error);
+      }
       setWeather(result);
       setStatus("ready");
     } catch (requestError) {
-      setError(requestError.message || t.error);
+      setError(requestError instanceof Error && requestError.message !== "The operation was aborted due to timeout"
+        ? requestError.message
+        : t.error);
       setStatus("error");
     }
   }

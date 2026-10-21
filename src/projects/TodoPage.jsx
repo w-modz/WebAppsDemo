@@ -1,6 +1,24 @@
 import React, { useEffect, useMemo, useState } from "react";
 
+const storageKey = "webapps-demo-react-tasks";
 const taskApi = "/api/tasks";
+const isStaticSite = import.meta.env.MODE === "pages";
+
+function readTasks() {
+  const savedTasks = localStorage.getItem(storageKey);
+  if (savedTasks === null) return [];
+
+  const tasks = JSON.parse(savedTasks);
+  if (!Array.isArray(tasks) || tasks.some((task) =>
+    !task || typeof task.id !== "string" || typeof task.content !== "string" || typeof task.deadline !== "string")) {
+    throw new Error("Saved tasks are invalid. Clear this site's saved data to start over.");
+  }
+  return tasks;
+}
+
+function saveTasks(tasks) {
+  localStorage.setItem(storageKey, JSON.stringify(tasks));
+}
 
 function getDefaultDeadline() {
   const date = new Date();
@@ -31,13 +49,17 @@ export default function TodoPage() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(true);
 
-  async function loadTasks() {
-    const response = await fetch(taskApi);
-    if (!response.ok) throw new Error("Could not load tasks.");
-    setTasks(await response.json());
-  }
-
   useEffect(() => {
+    async function loadTasks() {
+      if (isStaticSite) {
+        setTasks(readTasks());
+        return;
+      }
+      const response = await fetch(taskApi);
+      if (!response.ok) throw new Error("Could not load tasks.");
+      setTasks(await response.json());
+    }
+
     loadTasks()
       .catch((loadError) => setError(loadError.message))
       .finally(() => setLoading(false));
@@ -50,48 +72,86 @@ export default function TodoPage() {
     event.preventDefault();
     setError("");
     try {
-      const response = await fetch(taskApi, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ content: content.trim(), deadline: new Date(deadline).toISOString() }),
-      });
-      const result = await response.json();
-      if (!response.ok) throw new Error(result.error || "Could not add task.");
-      setTasks((current) => [...current, result]);
+      if (isStaticSite) {
+        const trimmedContent = content.trim();
+        const deadlineDate = new Date(deadline);
+        if (trimmedContent.length < 3 || trimmedContent.length > 255) {
+          throw new Error("Enter a task of 3–255 characters.");
+        }
+        if (!deadline || Number.isNaN(deadlineDate.getTime()) || deadlineDate <= new Date()) {
+          throw new Error("Enter a future deadline.");
+        }
+
+        const task = {
+          id: crypto.randomUUID(),
+          content: trimmedContent,
+          deadline: deadlineDate.toISOString(),
+          createdAt: new Date().toISOString(),
+        };
+        const nextTasks = [...tasks, task];
+        saveTasks(nextTasks);
+        setTasks(nextTasks);
+      } else {
+        const response = await fetch(taskApi, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ content: content.trim(), deadline: new Date(deadline).toISOString() }),
+        });
+        const result = await response.json();
+        if (!response.ok) throw new Error(result.error || "Could not add task.");
+        setTasks((current) => [...current, result]);
+      }
       setContent("");
+      setDeadline(getDefaultDeadline());
     } catch (requestError) {
-      setError(requestError.message);
+      setError(requestError instanceof Error ? requestError.message : "Could not add task.");
     }
   }
 
   async function saveEdit(task) {
     setError("");
     try {
-      const response = await fetch(`${taskApi}/${encodeURIComponent(task.id)}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ content: editContent.trim() }),
-      });
-      const result = await response.json();
-      if (!response.ok) throw new Error(result.error || "Could not update task.");
-      setTasks((current) => current.map((item) => item.id === result.id ? result : item));
+      if (isStaticSite) {
+        const trimmedContent = editContent.trim();
+        if (trimmedContent.length < 3 || trimmedContent.length > 255) {
+          throw new Error("Task text must be between 3 and 255 characters.");
+        }
+        const nextTasks = tasks.map((item) => item.id === task.id ? { ...item, content: trimmedContent } : item);
+        saveTasks(nextTasks);
+        setTasks(nextTasks);
+      } else {
+        const response = await fetch(`${taskApi}/${encodeURIComponent(task.id)}`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ content: editContent.trim() }),
+        });
+        const result = await response.json();
+        if (!response.ok) throw new Error(result.error || "Could not update task.");
+        setTasks((current) => current.map((item) => item.id === result.id ? result : item));
+      }
       setEditingId(null);
     } catch (requestError) {
-      setError(requestError.message);
+      setError(requestError instanceof Error ? requestError.message : "Could not update task.");
     }
   }
 
   async function deleteTask(taskId) {
     setError("");
     try {
-      const response = await fetch(`${taskApi}/${encodeURIComponent(taskId)}`, { method: "DELETE" });
-      if (!response.ok) {
-        const result = await response.json();
-        throw new Error(result.error || "Could not delete task.");
+      if (isStaticSite) {
+        const nextTasks = tasks.filter((task) => task.id !== taskId);
+        saveTasks(nextTasks);
+        setTasks(nextTasks);
+      } else {
+        const response = await fetch(`${taskApi}/${encodeURIComponent(taskId)}`, { method: "DELETE" });
+        if (!response.ok) {
+          const result = await response.json();
+          throw new Error(result.error || "Could not delete task.");
+        }
+        setTasks((current) => current.filter((task) => task.id !== taskId));
       }
-      setTasks((current) => current.filter((task) => task.id !== taskId));
     } catch (requestError) {
-      setError(requestError.message);
+      setError(requestError instanceof Error ? requestError.message : "Could not delete task.");
     }
   }
 
@@ -99,9 +159,15 @@ export default function TodoPage() {
     <main className="project-page todo-page">
       <section className="todo-app">
         <header className="todo-header">
-          <p className="eyebrow">Project A · Tasks backed by Node</p>
+          <p className="eyebrow">
+            {isStaticSite ? "Project A · Tasks saved in this browser" : "Project A · Tasks backed by Node"}
+          </p>
           <h1>Todo List</h1>
-          <p>Your tasks are saved on the server, not just in this browser.</p>
+          <p>
+            {isStaticSite
+              ? "Your tasks are saved in this browser, not on a server."
+              : "Your tasks are saved on the server, not just in this browser."}
+          </p>
         </header>
         <label className="todo-search">
           <span className="sr-only">Search tasks</span>

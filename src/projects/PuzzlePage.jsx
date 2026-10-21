@@ -60,11 +60,15 @@ export default function PuzzlePage() {
       const lon = coords.longitude;
       setCoordinates(`Lat: ${lat.toFixed(6)}, Long: ${lon.toFixed(6)}`);
       mapInstance.current?.setView([lat, lon], 13);
-      L.marker([lat, lon]).addTo(mapInstance.current).bindPopup("Your location");
     }, () => setError("Could not get your location. Check your browser permissions."));
   }
 
   async function createPuzzle() {
+    if (!mapVisible) {
+      setError("Show the map before creating a puzzle.");
+      return;
+    }
+
     setError("");
     setCapturing(true);
     let timeoutId;
@@ -127,8 +131,10 @@ export default function PuzzlePage() {
         </header>
         <div className="puzzle-controls">
           <button type="button" onClick={useMyLocation}>My location</button>
-          <button type="button" onClick={createPuzzle} disabled={capturing}>{capturing ? "Capturing map…" : "Create puzzle"}</button>
-          <button type="button" className="button-muted" onClick={() => setMapVisible((visible) => !visible)}>
+          <button type="button" onClick={createPuzzle} disabled={capturing || !mapVisible}>
+            {capturing ? "Capturing map…" : "Create puzzle"}
+          </button>
+          <button type="button" className="button-muted" onClick={() => setMapVisible((visible) => !visible)} disabled={capturing}>
             {mapVisible ? "Hide map" : "Show map"}
           </button>
           <label>
@@ -138,6 +144,7 @@ export default function PuzzlePage() {
             </select>
           </label>
           <span className="coordinates">{coordinates}</span>
+          {!mapVisible && <span className="coordinates" role="status">Show the map before creating a puzzle.</span>}
         </div>
         {error && <p className="app-error" role="alert">{error}</p>}
         <div className={`map-frame${mapVisible ? "" : " map-frame-hidden"}`}>

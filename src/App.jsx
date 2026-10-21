@@ -18,7 +18,11 @@ function HomePage() {
         <div className="container">
           <p className="eyebrow">A collection of university projects</p>
           <h1>WebApps Demo</h1>
-          <p>Explore three web apps, brought together in one React site.</p>
+          <p>
+            {import.meta.env.MODE === "pages"
+              ? "Explore three web apps, brought together in one static React site."
+              : "Explore three web apps, brought together in one React site."}
+          </p>
         </div>
       </header>
       <main className="container home-main">
