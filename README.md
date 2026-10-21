@@ -2,6 +2,8 @@
 
 This repository brings three university web-app projects together as one React application, backed by a shared Node.js/Express server.
 
+For the static GitHub Pages demo and how it differs from this server-backed app, see the [Pages version README](docs/README.md).
+
 ## Included apps
 
 - Project A — Todo app: searchable tasks with server-side JSON persistence
